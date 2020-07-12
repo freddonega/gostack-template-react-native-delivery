@@ -17,6 +17,7 @@ import {
   FoodDescription,
   FoodPricing,
 } from './styles';
+import { useNavigation } from '@react-navigation/native';
 
 interface Food {
   id: number;
@@ -30,9 +31,21 @@ interface Food {
 const Favorites: React.FC = () => {
   const [favorites, setFavorites] = useState<Food[]>([]);
 
+  const navigation = useNavigation();
+
+  const handleNavigate = (id: number) => {
+    navigation.navigate('FoodDetails', { id });
+  };
+
   useEffect(() => {
     async function loadFavorites(): Promise<void> {
       // Load favorite foods from api
+      try {
+        const { data } = await api.get<Food[]>('favorites');
+        setFavorites(data);
+      } catch (err) {
+        console.log(err);
+      }
     }
 
     loadFavorites();
@@ -49,7 +62,7 @@ const Favorites: React.FC = () => {
           data={favorites}
           keyExtractor={item => String(item.id)}
           renderItem={({ item }) => (
-            <Food activeOpacity={0.6}>
+            <Food activeOpacity={0.6} onPress={() => handleNavigate(item.id)}>
               <FoodImageContainer>
                 <Image
                   style={{ width: 88, height: 88 }}
@@ -59,7 +72,7 @@ const Favorites: React.FC = () => {
               <FoodContent>
                 <FoodTitle>{item.name}</FoodTitle>
                 <FoodDescription>{item.description}</FoodDescription>
-                <FoodPricing>{item.formattedPrice}</FoodPricing>
+                <FoodPricing>{formatValue(item.price)}</FoodPricing>
               </FoodContent>
             </Food>
           )}
